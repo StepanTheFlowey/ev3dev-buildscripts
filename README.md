@@ -10,17 +10,15 @@ a kernel for ev3dev-jessie, please use the [ev3dev-jessie branch].
 
 [ev3dev-jessie branch]: https://github.com/ev3dev/ev3dev-buildscripts/tree/ev3dev-jessie
 
-System Requirements
+Requirements
 -------------------
-* Ubuntu LTS (can be run in a [virtual machine](https://www.virtualbox.org/)
-  or with [Windows Subsystem for Linux](https://msdn.microsoft.com/en-us/commandline/wsl/install_guide))
+* Ubuntu LTS
 * User account with `sudo` enabled
 * Packages:
 
-        sudo apt-get update
-        # then install required packages
-        sudo apt-get install git build-essential ncurses-dev fakeroot bc \
-        u-boot-tools lzop flex bison libssl-dev gcc-arm-linux-gnueabi
+        sudo apt update
+        sudo apt install git build-essential ncurses-dev fakeroot bc \
+        u-boot-tools lzop flex bison libssl-dev crossbuild-essential-armel
 
 
 Scripts
@@ -51,15 +49,17 @@ First time kernel build
     to get the most recent commits).
 
         ~/work $ git clone https://github.com/ev3dev/ev3dev-buildscripts --branch ev3dev-stretch
-        ~/work $ git clone --recursive --depth 150 https://github.com/ev3dev/ev3-kernel \
-        --branch ev3dev-stretch
+        ~/work $ git clone --recursive --depth=1 --branch ev3dev-stretch https://github.com/ev3dev/ev3-kernel
+        ~/work $ cd ev3-kernel/drivers/lego
+        ~/work/ev3-kernel/drivers/lego $ git pull origin ev3dev-stretch
+        ~/work/ev3-kernel/drivers/lego $ cd -
 
 3.  Change to the `ev3dev-buildscripts` directory and have a look around.
 
         ~/work $ cd ev3dev-buildscripts
         ~/work/ev3dev-buildscripts $ ls
         boot.cmd        build-kernel  LICENSE    menuconfig  setup-env
-        build-boot-scr  defconfig     local-env  README.md
+        build-area      defconfig     local-env  README.md
 
 4.  Create a `local-env` to make use of all of your processing power. See the
     [Faster Builds and Custom Locations](#faster-builds-and-custom-locations)
@@ -105,9 +105,9 @@ in the ev3dev-buildscripts directory or `~/.ev3dev-env` (in your home directory)
 It should look like this:
 
     #!/bin/sh
-    
+
     export EV3DEV_MAKE_ARGS=-j4
-    
+
     # override any EV3DEV_* variables from setup-env script.
     #export EV3DEV_XXX=/custom/path
     #export EV3DEV_MERGE_CMD="kdiff3 \$file1 \$file2"
@@ -152,7 +152,7 @@ whenever you merge or checkout a branch. In you followed the tutorial above,
 `<path-to-ev3dev-buildscripts-repo>` would be `~/work/ev3dev-buildscripts`.
 
     #!/bin/sh
-    
+
     <path-to-ev3dev-buildscripts-repo>/defconfig merge
 
 
@@ -203,7 +203,7 @@ Common Errors
 * If you see this error...
 
         ERROR: ld.so: object 'libfakeroot-sysv.so' from LD_PRELOAD cannot be preloaded (wrong ELF class: ELFCLASS64): ignored.
-    
+
     ...just ignore it. It is normal (a side effect of cross-compiling).
 
 * If you see an error related to `asm/bitsperlong.h` like this:

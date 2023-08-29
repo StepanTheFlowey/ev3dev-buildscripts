@@ -1,7 +1,5 @@
 #!/bin/sh
-# ------------------------------------------------------------------------------
-# menuconfig - Runs make menuconfig
-# ------------------------------------------------------------------------------
-
-./build-kernel menuconfig || exit $?
-
+#
+# menuconfig - Runs make nconfig
+#
+exec ./build-kernel nconfig

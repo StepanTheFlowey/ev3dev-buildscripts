@@ -1,0 +1,6 @@
+#!/bin/sh
+
+export EV3DEV_MAKE_ARGS=-j8
+export KCFLAGS=-pipe
+export HOSTCFLAGS=-pipe
+export HOSTCXXFLAGS=-pipe

@@ -1,13 +1,7 @@
 #!/bin/sh
-# ------------------------------------------------------------------------------
+#
 # build-kernel - Builds the ev3dev kernel.
-# ------------------------------------------------------------------------------
-
-echo
-echo -------------------------------------------------------------------------------
-echo BUILDING KERNEL
-echo -------------------------------------------------------------------------------
-echo
+#
 
 set -e
 
@@ -15,77 +9,71 @@ set -e
 
 kernel_src_path="$EV3DEV_KERNEL"
 obj_path="$EV3DEV_OBJ"
+
 kernel_install_path="$EV3DEV_INSTALL_KERNEL"
 modules_install_path="$EV3DEV_INSTALL_MODULES"
 dtbs_install_path="$EV3DEV_INSTALL_DTBS"
-make_args="$EV3DEV_MAKE_ARGS -C ${kernel_src_path}
-	KBUILD_OUTPUT=${obj_path}
-	ARCH=arm
-	CROSS_COMPILE=$EV3DEV_TOOLCHAIN/$EV3DEV_ABI"
+
+make_args="$EV3DEV_MAKE_ARGS -C $kernel_src_path KBUILD_OUTPUT=$obj_path ARCH=arm CROSS_COMPILE=$EV3DEV_ABI"
 extra_default_targets="$EV3DEV_EXTRA_DEFAULT_TARGETS"
 uenv_txt_install_path="$EV3DEV_INSTALL_UENV_TXT"
 
-if [ ! -d "${obj_path}" ]
-then
-	echo "CREATING OBJ DIRECTORY"
-	make ${make_args} mrproper
+if [ ! -d "$obj_path" ]; then
+  echo "CREATING OBJ DIRECTORY"
+  make $make_args mrproper
 fi
 
-if [ ! -f "${obj_path}/.config" ]
-then
-	echo "LOADING DEFAULT KERNEL CONFIGURATION"
-	make ${make_args} defconfig KBUILD_DEFCONFIG=${EV3DEV_DEFCONFIG}
+if [ ! -f "$obj_path/.config" ]; then
+  echo "LOADING DEFAULT KERNEL CONFIGURATION"
+  make $make_args defconfig KBUILD_DEFCONFIG=$EV3DEV_DEFCONFIG
 fi
 
-if [ $# -eq 0 ]
-then
-	echo "CROSS COMPILING KERNEL"
-	make ${make_args} ${extra_default_targets} modules
+if [ $# -eq 0 ]; then
+  echo "CROSS COMPILING KERNEL"
+  make $make_args $extra_default_targets modules
 
-	if [ ! -d "${kernel_install_path}" ]
-	then
-		echo "CREATING KERNEL INSTALL DIRECTORY"
-		mkdir -p "${kernel_install_path}"
-	fi
+  if [ ! -d "$kernel_install_path" ]; then
+    echo "CREATING KERNEL INSTALL DIRECTORY"
+    mkdir -p "$kernel_install_path"
+  fi
 
-	if [ ! -d "${modules_install_path}" ]
-	then
-		echo "CREATING MODULE INSTALL DIRECTORY"
-		mkdir -p "${modules_install_path}"
-	fi
+  if [ ! -d "$modules_install_path" ]; then
+    echo "CREATING MODULE INSTALL DIRECTORY"
+    mkdir -p "$modules_install_path"
+  fi
 
-	echo "COPYING BOOTABLE IMAGE TO INSTALL DIRECTORY"
-	if [ "$EV3DEV_KERNEL_FLAVOR" = "ev3" ]; then
-		if [ -n "$EV3DEV_APPEND_DTB" ]; then
-			cat ${obj_path}/arch/arm/boot/zImage ${obj_path}/arch/arm/boot/dts/$EV3DEV_APPEND_DTB > ${obj_path}/arch/arm/boot/zImage+dtb
-			mkimage -A arm -O linux -T kernel -C none -a 0xC0008000 -e 0xC0008000 \
-				-n kernel -d ${obj_path}/arch/arm/boot/zImage+dtb ${obj_path}/arch/arm/boot/uImage
-		fi
-		cp ${obj_path}/arch/arm/boot/uImage ${kernel_install_path}
-	elif [ "$EV3DEV_KERNEL_FLAVOR" = "bb.org" ]; then
-		cp ${obj_path}/arch/arm/boot/zImage ${kernel_install_path}
-	elif [ "$EV3DEV_KERNEL_FLAVOR" = "rpi" ]; then
-		cp ${obj_path}/arch/arm/boot/zImage ${kernel_install_path}/kernel.img
-	elif [ "$EV3DEV_KERNEL_FLAVOR" = "rpi2" ]; then
-		cp ${obj_path}/arch/arm/boot/zImage ${kernel_install_path}/kernel7.img
-	fi
+  echo "COPYING BOOTABLE IMAGE TO INSTALL DIRECTORY"
+  if [ "$EV3DEV_KERNEL_FLAVOR" = "ev3" ]; then
+    if [ -n "$EV3DEV_APPEND_DTB" ]; then
+      cat $obj_path/arch/arm/boot/zImage $obj_path/arch/arm/boot/dts/$EV3DEV_APPEND_DTB > $obj_path/arch/arm/boot/zImage+dtb
+      mkimage -A arm -O linux -T kernel -C none -a 0xC0008000 -e 0xC0008000 \
+        -n kernel -d $obj_path/arch/arm/boot/zImage+dtb $obj_path/arch/arm/boot/uImage
+    fi
+    cp "$obj_path/arch/arm/boot/uImage" "$kernel_install_path"
+  elif [ "$EV3DEV_KERNEL_FLAVOR" = "bb.org" ]; then
+    cp "$obj_path/arch/arm/boot/zImage" "$kernel_install_path"
+  elif [ "$EV3DEV_KERNEL_FLAVOR" = "rpi" ]; then
+    cp "$obj_path/arch/arm/boot/zImage" "$kernel_install_path/kernel.img"
+  elif [ "$EV3DEV_KERNEL_FLAVOR" = "rpi2" ]; then
+    cp "$obj_path/arch/arm/boot/zImage" "$kernel_install_path/kernel7.img"
+  fi
 
-	echo "COPYING MODULES TO INSTALL DIRECTORY"
-	make ${make_args} modules_install INSTALL_MOD_PATH=${modules_install_path}
+  echo "COPYING MODULES TO INSTALL DIRECTORY"
+  make $make_args modules_install INSTALL_MOD_PATH=$modules_install_path
 
-	if [ ! -z ${EV3DEV_INSTALL_DTBS} ]; then
-		echo "COPYING DEVICE TREE BLOCKS TO INSTALL DIRECTORY"
-		make ${make_args} dtbs_install INSTALL_DTBS_PATH=${dtbs_install_path}
-	fi
+  if [ ! -z ${EV3DEV_INSTALL_DTBS} ]; then
+    echo "COPYING DEVICE TREE BLOCKS TO INSTALL DIRECTORY"
+    make $make_args dtbs_install INSTALL_DTBS_PATH=$dtbs_install_path
+  fi
 
-	if [ ! -z ${EV3DEV_COPY_DTB} ]; then
-		echo "COPYING DEVICE TREE TO KERNEL INSTALL DIRECTORY"
-		cp ${dtbs_install_path}/${EV3DEV_COPY_DTB} ${kernel_install_path}/${EV3DEV_COPY_DTB}
-	fi
+  if [ ! -z ${EV3DEV_COPY_DTB} ]; then
+    echo "COPYING DEVICE TREE TO KERNEL INSTALL DIRECTORY"
+    cp $dtbs_install_path/$EV3DEV_COPY_DTB $kernel_install_path/$EV3DEV_COPY_DTB
+  fi
 
-	if [ "$EV3DEV_KERNEL_FLAVOR" = "bb.org" ]; then
-		echo "COPYING UENV.TXT TO INSTALL DIRECTORY"
-		cat > ${uenv_txt_install_path}/uEnv.txt.new <<EOF
+  if [ "$EV3DEV_KERNEL_FLAVOR" = "bb.org" ]; then
+    echo "COPYING UENV.TXT TO INSTALL DIRECTORY"
+    cat > $uenv_txt_install_path/uEnv.txt.new <<EOF
 cape=$EV3DEV_CAPE
 
 cmdline=splash console=tty1
@@ -109,29 +97,27 @@ mmcargs=setenv bootargs console=tty0 console=\${console} \${optargs} \${cape_dis
 
 uenvcmd=run loadall; run mmcargs; echo debug: [\${bootargs}] ... ; echo debug: [bootz \${loadaddr} - \${fdtaddr}] ... ; bootz \${loadaddr} - \${fdtaddr};
 EOF
-		if [ -e ${uenv_txt_install_path}/uEnv.txt ]; then
-			if cmp ${uenv_txt_install_path}/uEnv.txt.new ${uenv_txt_install_path}/uEnv.txt --quiet; then
-				# Files are the same, so no need to replace existing file
-				rm ${uenv_txt_install_path}/uEnv.txt.new
-			else
-				# Files are different, so backup and replace existing file
-				mv --backup=existing --suffix=.old ${uenv_txt_install_path}/uEnv.txt.new ${uenv_txt_install_path}/uEnv.txt
-			fi
-		else
-			# File does not exist, so just move
-			mv ${uenv_txt_install_path}/uEnv.txt.new ${uenv_txt_install_path}/uEnv.txt
-		fi
-	fi
+    if [ -e $uenv_txt_install_path/uEnv.txt ]; then
+      if cmp $uenv_txt_install_path/uEnv.txt.new $uenv_txt_install_path/uEnv.txt --quiet; then
+        # Files are the same, so no need to replace existing file
+        rm $uenv_txt_install_path/uEnv.txt.new
+      else
+        # Files are different, so backup and replace existing file
+        mv --backup=existing --suffix=.old $uenv_txt_install_path/uEnv.txt.new $uenv_txt_install_path/uEnv.txt
+      fi
+    else
+      # File does not exist, so just move
+      mv $uenv_txt_install_path/uEnv.txt.new $uenv_txt_install_path/uEnv.txt
+    fi
+  fi
 else
-	echo "CROSS COMPILING KERNEL"
-	make ${make_args} $@
+  echo "CROSS COMPILING KERNEL"
+  make $make_args $@
 
-	for arg in "$@"
-	do
-		# If cleaning, remove the files generated by this script too.
-		if [ "$arg" = "clean" -o "$arg" = "mrproper" -o "$arg" = "distclean" ]
-		then
-			rm -rf kernel
-		fi
-	done
+  for arg in "$@"; do
+    # If cleaning, remove the files generated by this script too.
+    if [ "$arg" = "clean" -o "$arg" = "mrproper" -o "$arg" = "distclean" ]; then
+      rm -rf kernel
+    fi
+  done
 fi

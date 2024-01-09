@@ -10,19 +10,15 @@ a kernel for ev3dev-stretch, please use the [ev3dev-stretch branch].
 
 [ev3dev-stretch branch]: https://github.com/ev3dev/ev3dev-buildscripts/tree/ev3dev-stretch
 
-System Requirements
+Requirements
 -------------------
-* Ubuntu LTS (can be run in a [virtual machine](https://www.virtualbox.org/)
-  or with [Windows Subsystem for Linux](https://msdn.microsoft.com/en-us/commandline/wsl/install_guide))
+* Ubuntu LTS
 * User account with `sudo` enabled
 * Packages:
 
-        # If you haven't already added the ev3dev.org repository...
-        sudo apt-add-repository ppa:ev3dev/tools
-        sudo apt-get update
-        # then install required packages
-        sudo apt-get install git build-essential ncurses-dev fakeroot bc \
-        u-boot-tools lzop flex bison libssl-dev gcc-arm-linux-gnueabihf-8.3
+        sudo apt update
+        sudo apt install git build-essential ncurses-dev fakeroot bc \
+        u-boot-tools lzop flex bison libssl-dev crossbuild-essential-armel
 
 
 Scripts
@@ -52,8 +48,8 @@ First time kernel build
     update the submodule commit in the kernel repo, so you have to pull manually
     to get the most recent commits).
 
-        ~/work $ git clone git://github.com/ev3dev/ev3dev-buildscripts
-        ~/work $ git clone --recursive --depth 150 git://github.com/ev3dev/ev3-kernel
+        ~/work $ git clone https://github.com/ev3dev/ev3dev-buildscripts
+        ~/work $ git clone --recursive --depth=1 --branch ev3dev-buster https://github.com/ev3dev/ev3-kernel
         ~/work $ cd ev3-kernel/drivers/lego
         ~/work/ev3-kernel/drivers/lego $ git pull origin ev3dev-buster
         ~/work/ev3-kernel/drivers/lego $ cd -
@@ -63,7 +59,7 @@ First time kernel build
         ~/work $ cd ev3dev-buildscripts
         ~/work/ev3dev-buildscripts $ ls
         boot.cmd        build-kernel  LICENSE    menuconfig  setup-env
-        build-boot-scr  defconfig     local-env  README.md
+        build-area      defconfig     local-env  README.md
 
 4.  Create a `local-env` to make use of all of your processing power. See the
     [Faster Builds and Custom Locations](#faster-builds-and-custom-locations)
@@ -84,13 +80,17 @@ First time kernel build
         # BeagleBoard
         EV3DEV_KERNEL_FLAVOR=bb.org ./build-kernel
 
-6.  That's it!  
+6.  That's it! The uImage and kernel modules you just built are saved in
+    `./build-area`. You just need to copy the files to your
+    already formatted SD card. For an easier way of getting the kernel on
+    your EV3, see [Sharing Your Kernel](#sharing-your-kernel). Starting with
+    ev3dev-stretch images dated 2018-05 or later, the uImage file is no longer
+    used. Create a Debian package as described in the *Sharing Your Kernel*
+    section.
 
-    TODO: add instructions on how to modify uEnv.txt to use uImage file.
- 
-    For now, see [Sharing Your Kernel](#sharing-your-kernel) for how to create
-    a debian package to install the kernel you just built.
-
+        ~/work/ev3dev-buildscripts $ cd ./build-area/linux-ev3dev-ev3-dist
+        ~/work/ev3dev-buildscripts/build-area/linux-ev3dev-ev3-dist $ cp uImage <path-to-boot-partition>/uImage
+        ~/work/ev3dev-buildscripts/build-area/linux-ev3dev-ev3-dist $ sudo cp -r lib/ <path-to-file-system-partition>
 
 Faster Builds and Custom Locations
 ----------------------------------
@@ -104,9 +104,9 @@ in the ev3dev-buildscripts directory or `~/.ev3dev-env` (in your home directory)
 It should look like this:
 
     #!/bin/sh
-    
+
     export EV3DEV_MAKE_ARGS=-j4
-    
+
     # override any EV3DEV_* variables from setup-env script.
     #export EV3DEV_XXX=/custom/path
     #export EV3DEV_MERGE_CMD="kdiff3 \$file1 \$file2"
@@ -151,7 +151,7 @@ whenever you merge or checkout a branch. In you followed the tutorial above,
 `<path-to-ev3dev-buildscripts-repo>` would be `~/work/ev3dev-buildscripts`.
 
     #!/bin/sh
-    
+
     <path-to-ev3dev-buildscripts-repo>/defconfig merge
 
 
@@ -202,7 +202,7 @@ Common Errors
 * If you see this error...
 
         ERROR: ld.so: object 'libfakeroot-sysv.so' from LD_PRELOAD cannot be preloaded (wrong ELF class: ELFCLASS64): ignored.
-    
+
     ...just ignore it. It is normal (a side effect of cross-compiling).
 
 * If you see an error related to `asm/bitsperlong.h` like this:

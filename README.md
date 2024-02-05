@@ -48,16 +48,16 @@ First time kernel build
     update the submodule commit in the kernel repo, so you have to pull manually
     to get the most recent commits).
 
-        ~/work $ git clone https://github.com/ev3dev/ev3dev-buildscripts --branch ev3dev-stretch
-        ~/work $ git clone --recursive --depth=1 --branch ev3dev-stretch https://github.com/ev3dev/ev3-kernel
-        ~/work $ cd ev3-kernel/drivers/lego
-        ~/work/ev3-kernel/drivers/lego $ git pull origin ev3dev-stretch
-        ~/work/ev3-kernel/drivers/lego $ cd -
+        ~/work:$ git clone https://github.com/ev3dev/ev3dev-buildscripts --branch ev3dev-stretch
+        ~/work:$ git clone --recurse-submodules --depth=1 --branch ev3dev-stretch https://github.com/ev3dev/ev3-kernel
+        ~/work:$ cd ev3-kernel/drivers/lego
+        ~/work/ev3-kernel/drivers/lego:$ git pull origin ev3dev-stretch
+        ~/work/ev3-kernel/drivers/lego:$ cd -
 
 3.  Change to the `ev3dev-buildscripts` directory and have a look around.
 
-        ~/work $ cd ev3dev-buildscripts
-        ~/work/ev3dev-buildscripts $ ls
+        ~/work:$ cd ev3dev-buildscripts
+        ~/work/ev3dev-buildscripts:$ ls
         boot.cmd        build-kernel  LICENSE    menuconfig  setup-env
         build-area      defconfig     local-env  README.md
 
@@ -65,11 +65,11 @@ First time kernel build
     [Faster Builds and Custom Locations](#faster-builds-and-custom-locations)
     section below for more about this file.
 
-        ~/work/ev3dev-buildscripts $ echo "export EV3DEV_MAKE_ARGS=-j4" > local-env
+        ~/work/ev3dev-buildscripts:$ echo "export EV3DEV_MAKE_ARGS=-j4" > local-env
 
 5.  Now we can compile the kernel.
 
-        ~/work/ev3dev-buildscripts $ ./build-kernel
+        ~/work/ev3dev-buildscripts:$ ./build-kernel
 
     For Raspberry Pi and BeagleBone Black we need to set an environment variable.
 
@@ -88,9 +88,9 @@ First time kernel build
     used. Create a Debian package as described in the *Sharing Your Kernel*
     section.
 
-        ~/work/ev3dev-buildscripts $ cd ./build-area/linux-ev3dev-ev3-dist
-        ~/work/ev3dev-buildscripts/build-area/linux-ev3dev-ev3-dist $ cp uImage <path-to-boot-partition>/uImage
-        ~/work/ev3dev-buildscripts/build-area/linux-ev3dev-ev3-dist $ sudo cp -r lib/ <path-to-file-system-partition>
+        ~/work/ev3dev-buildscripts:$ cd ./build-area/linux-ev3dev-ev3-dist
+        ~/work/ev3dev-buildscripts/build-area/linux-ev3dev-ev3-dist:$ cp uImage <path-to-boot-partition>/uImage
+        ~/work/ev3dev-buildscripts/build-area/linux-ev3dev-ev3-dist:$ sudo cp -r lib/ <path-to-file-system-partition>
 
 
 Faster Builds and Custom Locations

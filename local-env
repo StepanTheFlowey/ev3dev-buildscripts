@@ -1,6 +1,4 @@
 #!/bin/sh
 
-export EV3DEV_MAKE_ARGS=-j$(nproc)
-export KCFLAGS="-pipe -w"
-export HOSTCFLAGS=$KCFLAGS
-export HOSTCXXFLAGS=$KCFLAGS
+export EV3DEV_MAKE_ARGS=-j`nproc` KCFLAGS="-pipe -w"
+export HOSTCFLAGS=$KCFLAGS HOSTCXXFLAGS=$KCFLAGS

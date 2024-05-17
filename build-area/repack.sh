@@ -21,7 +21,7 @@ cd __tmp
 
 ar x ../$1
 zstd -q -d *.zst
-gzip control.tar data.tar
+gzip -9 control.tar data.tar
 ar r ../$2 debian-binary control.tar.gz data.tar.gz
 
 cd ..

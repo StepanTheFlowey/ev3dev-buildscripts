@@ -8,11 +8,20 @@ Those scripts have evolved into the [brickstrap] package.
 **NOTE:** The instructions below are for ev3dev-buster. If you want to build
 a kernel for ev3dev-stretch, please use the [ev3dev-stretch branch].
 
-[ev3dev-stretch branch]: https://github.com/ev3dev/ev3dev-buildscripts/tree/ev3dev-stretch
+[ev3dev-stretch branch]: https://github.com/StepanTheFlowey/ev3dev-buildscripts/tree/ev3dev-stretch
+
+The kernel builds published in releases are cut out of many functions
+and may not be suitable for use in any environment.
+
+**WARNING:** Latest builds includes only RTL8818EU USB driver for WiFi.
+Any other WiFi adapter won't work.
+Also make sure lz4 is installed in your ev3dev and initramfs-tools
+configured to compress initrd in lz4 as of kernel supports only
+lz4 compressed initramfs.
 
 Requirements
 -------------------
-* Ubuntu LTS
+* Ubuntu LTS (or Ubuntu LTS based distro)
 * User account with `sudo` enabled
 * Packages:
 
@@ -20,18 +29,16 @@ Requirements
         sudo apt install git build-essential ncurses-dev fakeroot bc \
         u-boot-tools lzop flex bison libssl-dev crossbuild-essential-armel
 
-
 Scripts
 -------
 
-`build-kernel`               Used to build the kernel.
+`build-kernel` Used to build the kernel.
 
-`defconfig`                  Used to manage the `*_defconfig` file and
-                             your current local configuration (`.config`).
+`defconfig`    Used to manage the `*_defconfig` file and
+               your current local configuration (`.config`).
 
-`menuconfig`                 Runs the menu configuration tool for the
-                             kernel configuration.
-
+`menuconfig`   Runs the menu configuration tool for the
+               kernel configuration.
 
 First time kernel build
 -----------------------
@@ -40,16 +47,16 @@ First time kernel build
     `~/work`. The build scripts will generate extra subdirectories here
     so we suggest creating a new directory instead of using an existing one.
 
-        ~ $ mkdir work
-        ~ $ cd work
+        ~:$ mkdir work
+        ~:$ cd work
 
 2.  Clone this repo and also the `ev3-kernel` repo (or `rpi-kernel` or `bb.org-kernel`),
     then make sure the lego drivers submodule is up to date (we don't always
     update the submodule commit in the kernel repo, so you have to pull manually
     to get the most recent commits).
 
-        ~/work:$ git clone https://github.com/ev3dev/ev3dev-buildscripts --branch ev3dev-buster
-        ~/work:$ git clone --recurse-submodules --depth=1 --branch ev3dev-buster https://github.com/ev3dev/ev3-kernel
+        ~/work:$ git clone https://github.com/StepanTheFlowey/ev3dev-buildscripts --branch ev3dev-buster
+        ~/work:$ git clone --recurse-submodules --depth=1 --branch ev3dev-buster https://github.com/StepanTheFlowey/ev3-kernel
         ~/work:$ cd ev3-kernel/drivers/lego
         ~/work/ev3-kernel/drivers/lego:$ git pull origin ev3dev-buster
         ~/work/ev3-kernel/drivers/lego:$ cd -
@@ -58,16 +65,10 @@ First time kernel build
 
         ~/work:$ cd ev3dev-buildscripts
         ~/work/ev3dev-buildscripts:$ ls
-        boot.cmd        build-kernel  LICENSE    menuconfig  setup-env
-        build-area      defconfig     local-env  README.md
+        build-area    defconfig  local-env   README.md
+        build-kernel  LICENSE    menuconfig  setup-env
 
-4.  Create a `local-env` to make use of all of your processing power. See the
-    [Faster Builds and Custom Locations](#faster-builds-and-custom-locations)
-    section below for more about this file.
-
-        ~/work/ev3dev-buildscripts:$ echo "export EV3DEV_MAKE_ARGS=-j4" > local-env
-
-5.  Now we can compile the kernel.
+4.  Now we can compile the kernel.
 
         ~/work/ev3dev-buildscripts:$ ./build-kernel
 
@@ -80,41 +81,38 @@ First time kernel build
         # BeagleBoard
         EV3DEV_KERNEL_FLAVOR=bb.org ./build-kernel
 
-6.  That's it! The uImage and kernel modules you just built are saved in
+5.  That's it! The uImage and kernel modules you just built are saved in
     `./build-area`. You just need to copy the files to your
     already formatted SD card. For an easier way of getting the kernel on
-    your EV3, see [Sharing Your Kernel](#sharing-your-kernel). Starting with
+    your EV3, see [Sharing your kernel](#sharing-your-kernel). Starting with
     ev3dev-stretch images dated 2018-05 or later, the uImage file is no longer
-    used. Create a Debian package as described in the *Sharing Your Kernel*
+    used. Create a Debian package as described in the *Sharing your kernel*
     section.
 
         ~/work/ev3dev-buildscripts:$ cd ./build-area/linux-ev3dev-ev3-dist
         ~/work/ev3dev-buildscripts/build-area/linux-ev3dev-ev3-dist:$ cp uImage <path-to-boot-partition>/uImage
         ~/work/ev3dev-buildscripts/build-area/linux-ev3dev-ev3-dist:$ sudo cp -r lib/ <path-to-file-system-partition>
 
-Faster Builds and Custom Locations
-----------------------------------
+Custom locations
+----------------
 
 By default the locations of the kernel source tree and the toolchain used
 to build the kernel are expected to be in certain directories relative to
 the ev3dev-buildscripts repo directory.
 
-You can override these locations by creating a file called `local-env`
-in the ev3dev-buildscripts directory or `~/.ev3dev-env` (in your home directory).
+You can override these locations by modifying a file called `local-env`
+in the ev3dev-buildscripts directory.
 It should look like this:
 
     #!/bin/sh
 
-    export EV3DEV_MAKE_ARGS=-j4
+    export EV3DEV_MAKE_ARGS=-j`nproc` KCFLAGS="-pipe -w"
+    export HOSTCFLAGS=$KCFLAGS HOSTCXXFLAGS=$KCFLAGS
 
     # override any EV3DEV_* variables from setup-env script.
     #export EV3DEV_XXX=/custom/path
     #export EV3DEV_MERGE_CMD="kdiff3 \$file1 \$file2"
     #export EV3DEV_MERGE_CMD="meld \$file1 \$file2"
-
-The `-j4` is for faster builds. It allows make to compile files in
-in parallel. You should replace 4 with the number of processor cores that
-you want to devote to building the kernel.
 
 You can use custom paths to make the `build-kernel` script automatically
 install the kernel and modules directly on the EV3! First, you need to
@@ -126,8 +124,7 @@ mount the EV3 root file system. You can use nfs or sshfs (check the
     export EV3DEV_INSTALL_KERNEL=/mnt/ev3dev-root/boot/flash
     export EV3DEV_INSTALL_MODULES=/mnt/ev3dev-root
 
-
-Managing the Kernel Configuration
+Managing the kernel configuration
 ---------------------------------
 
 When you run `./build-kernel` if no existing kernel configuration exists
@@ -154,8 +151,7 @@ whenever you merge or checkout a branch. In you followed the tutorial above,
 
     <path-to-ev3dev-buildscripts-repo>/defconfig merge
 
-
-Sharing Your Kernel
+Sharing your kernel
 -------------------
 
 Want to send your custom kernel to someone so that they can use it? Never fear,
@@ -191,12 +187,12 @@ Now, send the `linux-image-*` file to your friend with these instructions:
 
 Example:
 
-    user@host ~ $ scp linux-image-*.deb otheruser@ev3dev:~
-    user@host ~ $ ssh otheruser@ev3dev
-    otheruser@ev3dev:~$ sudo dpkg --install ~/linux-image-*.deb
-    otheruser@ev3dev:~$ sudo reboot
+    user@host ~ $ scp linux-image-*.deb robot@ev3dev:~
+    user@host ~ $ ssh robot@ev3dev
+    robot@ev3dev:~$ sudo dpkg -i ~/linux-image-*.deb
+    robot@ev3dev:~$ exec sudo reboot
 
-Common Errors
+Common errors
 -------------
 
 * If you see this error...

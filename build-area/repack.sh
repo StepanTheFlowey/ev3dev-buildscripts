@@ -16,13 +16,14 @@ fi
 
 echo "Repacking $1 into $2 ..."
 
-mkdir __tmp
-cd __tmp
+TMP=$(mktemp -d -p .)
+cd "$TMP"
 
 ar x ../$1
-zstd -q -d *.zst
-gzip -9 control.tar data.tar
+zstd -cdq control.tar.zst | gzip -9 > control.tar.gz &
+zstd -cdq data.tar.zst | gzip -9 > data.tar.gz
+wait
 ar r ../$2 debian-binary control.tar.gz data.tar.gz
 
 cd ..
-rm -rf __tmp
+rm -rf "$TMP"

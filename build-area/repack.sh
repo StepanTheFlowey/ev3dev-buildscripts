@@ -1,17 +1,17 @@
 #/bin/sh
 
 usage() {
-  echo "Usage: $0 <in> <out>"
+	echo "Usage: $0 <in> <out>"
 }
 
 if [ -z $1 ]; then
-  usage
-  exit
+	usage
+	exit
 fi
 
 if [ -z $2 ]; then
-  usage
-  exit
+	usage
+	exit
 fi
 
 echo "Repacking $1 into $2 ..."
